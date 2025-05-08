@@ -1,12 +1,6 @@
 import type { Metadata } from "next";
-import { Tektur } from "next/font/google";
-import "./globals.css";
 
-export const tektur = Tektur({
-  variable: "--font-tektur",
-  subsets: ["latin"],
-  weight: "500",
-});
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Api Evolution",

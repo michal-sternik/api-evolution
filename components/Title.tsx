@@ -1,4 +1,4 @@
-import { tektur } from "@/app/layout";
+import { tektur } from "@/lib/fonts";
 
 interface TitleProps {
   text: string;

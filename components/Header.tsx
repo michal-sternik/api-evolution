@@ -1,4 +1,5 @@
-import { tektur } from "@/app/layout";
+import { tektur } from "@/lib/fonts";
+
 import { ReactNode } from "react";
 
 export function Header({ children }: { children: ReactNode }) {
