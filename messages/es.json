@@ -1,0 +1,484 @@
+{
+  "title": "Evaluación del rendimiento de REST, GraphQL y gRPC",
+  "research": {
+    "title": "Análisis comparativo de rendimiento de REST, GraphQL y gRPC",
+    "subtitle": "En arquitectura de comunicación de microservicios",
+    "badges": {
+      "readTime": "15 min de lectura",
+      "performanceStudy": "Estudio de rendimiento",
+      "microservices": "Microservicios",
+      "buyMeCoffee": "Invítame a un café"
+    },
+    "summary": {
+      "fastestResponseTime": "Tiempo de respuesta más rápido",
+      "gRPC": "gRPC",
+      "gRPCRange": "233 ms - 2,6 s (datos planos)",
+      "lowestCPUUsage": "Uso de CPU más bajo",
+      "REST": "REST",
+      "RESTRange": "10 % - 49 % (datos planos)",
+      "highestResourceUsage": "Mayor consumo de recursos",
+      "GraphQL": "GraphQL",
+      "GraphQLRange": "120 % - 177 % de CPU"
+    },
+    "overview": {
+      "title": "Resumen general",
+      "content": "Los sistemas distribuidos modernos adoptan cada vez más la arquitectura de microservicios como enfoque fundamental para construir aplicaciones robustas y mantenibles. La elección del protocolo de comunicación entre microservicios desempeña un papel crucial en la eficiencia general del sistema. Esta investigación examina las características comparativas de rendimiento de tres métodos de comunicación de API prevalentes: REST, GraphQL y gRPC en entornos de microservicios. Nuestro marco experimental consta de tres microservicios contenedorizados, cada uno equipado con Redis y sistemas de bases de datos MySQL. La evaluación de rendimiento se centró en dos métricas críticas: latencia de respuesta y utilización del procesador. La evaluación abarcó dos patrones de acceso a datos: recuperación simple de datos planos y operaciones complejas de datos anidados, probando volúmenes de solicitudes desde 100 hasta 500 operaciones concurrentes. Los resultados demuestran que gRPC alcanza los tiempos de respuesta más rápidos, con REST mostrando un rendimiento intermedio y GraphQL exhibiendo la mayor latencia. Además, GraphQL presenta un consumo de CPU significativamente más alto en comparación con las implementaciones de gRPC y REST. Estos hallazgos ofrecen orientación valiosa para arquitectos de sistemas y desarrolladores al seleccionar estrategias de comunicación óptimas para sus implementaciones de microservicios."
+    },
+    "background": {
+      "title": "Antecedentes y motivación",
+      "paragraph1": "La evolución de la ingeniería de software ha adoptado la arquitectura de microservicios como un enfoque transformador para el diseño de aplicaciones. Este patrón arquitectónico promueve la descomposición de aplicaciones monolíticas en servicios más pequeños y autónomos. Cada servicio mantiene responsabilidades distintas y puede desarrollarse, desplegarse y escalarse de forma independiente sin afectar a otros componentes del sistema. Este enfoque permite a los equipos de desarrollo concentrarse en dominios funcionales específicos, resultando en una mayor escalabilidad, ciclos de desarrollo más rápidos y mejor tolerancia a fallos.",
+      "paragraph2": "Dentro de los ecosistemas de microservicios, dos protocolos de comunicación prominentes han ganado amplia adopción: Representational State Transfer (REST) y Graph Query Language (GraphQL). REST se ha establecido como una metodología fundamental de intercambio de datos, utilizando endpoints distintos para el acceso y la manipulación de datos. A pesar de su popularidad, REST presenta ciertas limitaciones, incluidas ineficiencias en los patrones de recuperación de datos donde las respuestas pueden contener información excesiva o insuficiente en relación con los requisitos del cliente. Para abordar estas deficiencias, GraphQL ha surgido como una alternativa atractiva. GraphQL permite a los clientes especificar con precisión sus requisitos de datos, resolviendo eficazmente los problemas de eficiencia de REST y proporcionando a los desarrolladores un control mejorado sobre las operaciones de datos.",
+      "paragraph3": "Más allá de REST y GraphQL, Google Remote Procedure Call (gRPC) ha ganado una tracción significativa como una metodología innovadora de intercambio de datos. gRPC proporciona un marco robusto y flexible para la comunicación entre servicios dentro de arquitecturas distribuidas. Mientras que REST y GraphQL operan sobre protocolos HTTP/1, gRPC aprovecha las capacidades avanzadas de HTTP/2, incluido el soporte nativo para streaming. gRPC agiliza la invocación de procedimientos remotos en diversos lenguajes de programación, ofreciendo un mejor rendimiento y menor latencia en escenarios de comunicación de microservicios."
+    },
+    "literatureReview": {
+      "title": "Revisión de la literatura",
+      "paragraph1": "Investigaciones exhaustivas han investigado las características comparativas de rendimiento de las implementaciones de REST y GraphQL. Varios estudios han analizado estos protocolos en contextos de gateways de API, examinando operaciones tanto de escritura como de lectura de datos. La investigación ha resaltado las fortalezas y limitaciones relativas de cada enfoque. Cuando las aplicaciones requieren un manejo eficiente de datos que cambian con frecuencia y una utilización optimizada de recursos, GraphQL suele emerger como la solución preferida.",
+      "paragraph2": "Los análisis comparativos se han centrado en metodologías de diseño de API, examinando tiempos de respuesta y tamaños de carga útil mediante implementaciones prácticas. Estudios que utilizan aplicaciones NodeJS realizando operaciones CRUD estándar en bases de datos MongoDB han revelado patrones de rendimiento matizados. Mientras que las diferencias son mínimas en escenarios de consultas simples, GraphQL demuestra ventajas en entornos de alta carga con requisitos de datos selectivos, mientras que REST muestra un rendimiento superior para transferencias de datos completas.",
+      "paragraph3": "Nuestra investigación contribuye a este cuerpo de conocimiento al proporcionar una comparación integral de rendimiento de REST, GraphQL y gRPC en entornos de microservicios. Este análisis tiene como objetivo iluminar los protocolos de comunicación óptimos para varios escenarios operativos y características de carga de trabajo, ofreciendo ideas prácticas para arquitectos de sistemas y desarrolladores."
+    },
+    "protocolsOverview": {
+      "title": "Visión general de los protocolos de comunicación",
+      "introduction": "Los protocolos de Interface de Programación de Aplicaciones establecen marcos, convenciones y especificaciones estandarizadas que permiten una comunicación e integración sin fisuras entre diversas aplicaciones de software y sistemas distribuidos. Estos protocolos definen la organización estructural y el formato de las solicitudes y respuestas, junto con las metodologías y reglas de gobernanza para la comunicación entre sistemas.",
+      "table": {
+        "protocol": "Protocolo",
+        "httpVersion": "Versión HTTP",
+        "dataFormat": "Formato de datos",
+        "keyFeatures": "Características clave",
+        "rest": {
+          "httpVersion": "HTTP/1.1",
+          "dataFormat": "JSON, XML",
+          "features": "Sin estado, cacheable, simple"
+        },
+        "graphql": {
+          "httpVersion": "HTTP/1.1",
+          "dataFormat": "JSON",
+          "features": "Lenguaje de consulta, obtención de datos flexible"
+        },
+        "grpc": {
+          "httpVersion": "HTTP/2",
+          "dataFormat": "Protocol Buffers",
+          "features": "Streaming, multiplexación, tipado fuerte"
+        }
+      },
+      "rest": {
+        "title": "A. Representational State Transfer (REST)",
+        "description": "REST representa un marco arquitectónico para el desarrollo de API que facilita la comunicación cliente-servidor a través de protocolos HTTP. Originalmente conceptualizado por Roy Fielding en su investigación doctoral de 2000 en la Universidad de California, REST emplea HTTP/1.1 para la transmisión de datos entre cliente y servidor. Los sistemas basados en REST suelen implementar endpoints específicos para permitir la comunicación y el intercambio de datos entre servicios."
+      },
+      "graphql": {
+        "title": "B. Graph Query Language (GraphQL)",
+        "description": "GraphQL funciona como un lenguaje de consulta diseñado específicamente para interacciones de API, desarrollado originalmente por Facebook para la comunicación cliente-servidor. Los clientes formulan solicitudes de datos precisas mediante consultas estructuradas, lo que permite a los servidores devolver respuestas que coincidan exactamente con las especificaciones del cliente. GraphQL ofrece una alternativa innovadora a REST, permitiendo a los desarrolladores solicitar datos dirigidos con mayor eficiencia y flexibilidad."
+      },
+      "grpc": {
+        "title": "C. Google Remote Procedure Call (gRPC)",
+        "description": "gRPC sirve como un marco de alto rendimiento de código abierto diseñado para construir sistemas distribuidos eficientes y arquitecturas de microservicios. Desarrollado por Google, gRPC permite la comunicación multiplataforma e independiente del lenguaje entre aplicaciones y servicios. El marco utiliza Protocol Buffers (protobufs) como un lenguaje neutral para la definición de interfaces, lo que permite a las aplicaciones definir métodos de servicio y estructuras de datos con un fuerte tipado."
+      }
+    },
+    "architecture": {
+      "title": "Arquitectura e implementación experimental",
+      "introduction": "Nuestra implementación experimental utilizó microservicios basados en Golang, tomando como referencia un estudio de caso del Sistema de Información Educativa Integrado (SISTER) del Ministerio de Educación y Cultura de Indonesia. Este sistema integral gestiona recursos del sector educativo, abarcando instituciones académicas, actividades de investigación y datos de recursos humanos en múltiples niveles organizativos.",
+      "systemComponents": {
+        "title": "Componentes de la arquitectura del sistema",
+        "authService": {
+          "title": "Servicio de autenticación",
+          "description": "Gestiona la autenticación y autorización de usuarios"
+        },
+        "lecturerService": {
+          "title": "Servicio de perfil de docentes",
+          "description": "Recupera datos planos (perfiles de docentes)"
+        },
+        "educationService": {
+          "title": "Servicio de formación educativa",
+          "description": "Recupera datos anidados (perfiles + formación)"
+        }
+      },
+      "database": {
+        "title": "Configuración de la base de datos",
+        "mysql": "MySQL: solución de almacenamiento a largo plazo",
+        "redis": "Redis: sistema de caché en memoria",
+        "dataVolume": "Volumen de datos: 2 221 perfiles de docentes",
+        "extendedData": "Datos ampliados: 6 197 perfiles con formación académica"
+      },
+      "dataRetrieval": {
+        "title": "Proceso de recuperación de datos",
+        "primaryFetch": "Recuperación principal desde caché de Redis",
+        "fallback": "Retroceso a MySQL en caso de fallo de caché",
+        "cachePopulation": "Población de caché al recuperar de MySQL",
+        "optimized": "Optimizado para acceso de baja latencia"
+      },
+      "dataStructures": {
+        "flatData": {
+          "title": "Estructura de datos plana"
+        },
+        "nestedData": {
+          "title": "Estructura de datos anidada"
+        }
+      }
+    },
+    "performance": {
+      "title": "Análisis de rendimiento y resultados",
+      "introduction": "Se realizaron evaluaciones completas de rendimiento para evaluar el impacto de las cargas de trabajo de recuperación de datos en la latencia de respuesta y la utilización de recursos computacionales. Este marco de evaluación tuvo como objetivo determinar los enfoques de intercambio de datos más eficaces tanto para estructuras de datos simples como complejas. Apache JMeter fue nuestra herramienta principal para pruebas de carga de API y medición de rendimiento.",
+      "concurrent": {
+        "title": "A. Evaluación de solicitudes concurrentes",
+        "colorCoding": {
+          "title": "Codificación por color de protocolos"
+        },
+        "responseTime": {
+          "flatData": "Tiempo de respuesta – datos planos",
+          "nestedData": "Tiempo de respuesta – datos anidados"
+        },
+        "cpuUtilization": {
+          "flatData": "Uso de CPU – datos planos",
+          "nestedData": "Uso de CPU – datos anidados"
+        },
+        "keyFindings": {
+          "responseTime": {
+            "title": "Hallazgos clave – Tiempo de respuesta:",
+            "simpleData": "Datos simples: gRPC óptimo (233 - 2 606 ms), REST intermedio (1 113 - 4 009 ms), GraphQL mayor latencia (3 852 - 21 148 ms)",
+            "complexData": "Datos complejos: REST superior (5 201 - 16 646 ms), gRPC intermedio (5 667 - 14 962 ms), GraphQL peor latencia (8 510 - 29 734 ms)"
+          },
+          "cpuUtilization": {
+            "title": "Hallazgos clave – Uso de CPU:",
+            "simpleData": "Datos simples: REST mínimo (10 - 48 %), gRPC intermedio (10 - 36 %), GraphQL máximo (120 - 142 %)",
+            "complexData": "Datos complejos: gRPC eficiente (30 - 84 %), REST moderado (38 - 123 %), GraphQL intensivo (100 - 177 %)"
+          }
+        }
+      },
+      "sustained": {
+        "title": "B. Evaluación sostenida de solicitudes (duración de 5 minutos)",
+        "responseTime": {
+          "flatData": "Tiempo de respuesta consecutivo – datos planos",
+          "nestedData": "Tiempo de respuesta consecutivo – datos anidados"
+        },
+        "cpuUtilization": {
+          "flatData": "Uso de CPU consecutivo – datos planos"
+        },
+        "results": {
+          "title": "Resultados de pruebas consecutivas:",
+          "point1": "gRPC consistentemente más rápido en pruebas sostenidas de 5 minutos",
+          "point2": "REST mantiene un rendimiento estable en diferentes volúmenes de solicitudes",
+          "point3": "GraphQL muestra el mayor consumo de recursos en operaciones sostenidas",
+          "point4": "La ventaja de HTTP/2 de gRPC se hace más evidente en cargas sostenidas"
+        }
+      },
+      "charts": {
+        "concurrentRequests": "Solicitudes concurrentes",
+        "responseTimeMs": "Tiempo de respuesta (ms)",
+        "cpuUtilizationPercent": "Uso de CPU (%)",
+        "requestsLabel": "{count} solicitudes"
+      }
+    },
+    "findings": {
+      "title": "Hallazgos y recomendaciones",
+      "paragraph1": "Las arquitecturas modernas de sistemas distribuidos adoptan mayoritariamente patrones de microservicios como base para desarrollar soluciones de software escalables y mantenibles. La selección estratégica de protocolos de comunicación entre servicios representa un factor crítico para lograr características óptimas de rendimiento del sistema. Esta investigación ofrece una evaluación integral del rendimiento de protocolos API: REST, gRPC y GraphQL en arquitecturas basadas en microservicios que utilizan tecnologías de base de datos Redis y MySQL.",
+      "paragraph2": "Nuestra investigación examinó dos patrones distintos de acceso a datos: recuperación de datos planos simples y operaciones de datos anidados complejos. El análisis de rendimiento basado en métricas de latencia de respuesta y utilización de CPU en ambos escenarios de datos reveló que gRPC alcanzó tiempos de respuesta óptimos, mientras que REST demostró una eficiencia de recursos superior en comparación con las implementaciones de gRPC y GraphQL.",
+      "recommendations": {
+        "title": "Recomendaciones clave:",
+        "grpc": "Ideal para escenarios que requieren tiempos de respuesta más rápidos y aplicaciones de alto rendimiento",
+        "rest": "Óptimo para entornos con recursos limitados y operaciones CRUD simples",
+        "graphql": "Considerar cuidadosamente debido a su mayor consumo de recursos, ideal para requisitos de datos complejos"
+      }
+    },
+    "support": {
+      "title": "Apoya mi trabajo",
+      "subtitle": "¿Te resultó valioso este análisis para tus decisiones de arquitectura?",
+      "description": "Ayúdame a seguir creando contenido técnico comprensivo y contribuciones de código abierto que beneficien a la comunidad de desarrolladores.",
+      "buyMeCoffee": "Invítame a un café",
+      "connectLinkedIn": "Conéctate en LinkedIn"
+    },
+    "references": {
+      "title": "Referencias",
+      "showMore": "Mostrar todas las referencias ({count} en total)",
+      "showLess": "Mostrar menos referencias"
+    },
+    "footer": {
+      "createdBy": "Creado por"
+    }
+  },
+  "atGlance": {
+    "title": "De un vistazo",
+    "executiveSummary": "Resumen ejecutivo",
+    "content": "La arquitectura de microservicios se ha convertido en el paradigma de diseño para crear sistemas de software escalables y mantenibles. Seleccionar el protocolo de comunicación adecuado en microservicios es crítico para lograr un rendimiento óptimo del sistema. Este análisis compara el rendimiento de tres protocolos API de uso común: REST, GraphQL y gRPC, en arquitectura de microservicios. La evaluación utiliza dos métricas clave de rendimiento: tiempo de respuesta y utilización de CPU, examinando escenarios de recuperación de datos planos y anidados con cargas de 100 a 500 solicitudes. Los resultados experimentales indican que gRPC muestra tiempos de respuesta superiores, seguido de REST y GraphQL. Además, GraphQL exhibe una mayor utilización de CPU en comparación con gRPC y REST."
+  },
+  "introduction": {
+    "title": "Introducción",
+    "modernArchitecture": "Arquitectura de software moderna",
+    "modernContent": "El desarrollo de software moderno utilizando la arquitectura de microservicios ha cambiado fundamentalmente la forma en que diseñamos aplicaciones. Esta arquitectura aboga por descomponer aplicaciones complejas en microservicios más pequeños y autónomos, cada uno con responsabilidades específicas que pueden gestionarse y modificarse de forma independiente. Este enfoque permite a los equipos de desarrollo centrarse en aspectos concretos de las aplicaciones, mejorando la escalabilidad, permitiendo cambios más rápidos y proporcionando un mejor aislamiento de fallos."
+  },
+  "protocolIntroduction": {
+    "title": "Introducción a los protocolos de comunicación API",
+    "protocolLandscape": "Panorama de protocolos",
+    "protocolContent": "En la comunicación de microservicios han surgido tres protocolos como los más utilizados: Representational State Transfer (REST), Graph Query Language (GraphQL) y Google Remote Procedure Call (gRPC). Cada uno ofrece ventajas y compensaciones distintas para diferentes casos de uso y requisitos de rendimiento.",
+    "comparisonOverview": "Visión general de comparación de protocolos",
+    "comparisonContent": "REST ha sido uno de los métodos de intercambio de datos más adoptados, confiando en múltiples endpoints para acceder y manipular datos. Sin embargo, REST presenta ciertos inconvenientes, como la sobrecarga o falta de datos, donde los datos recuperados pueden exceder o no cumplir con las necesidades reales. GraphQL surgió como una alternativa atractiva, permitiendo a los clientes especificar exactamente los datos que necesitan, superando los problemas de ineficiencia de REST. Mientras tanto, gRPC ofrece un enfoque eficiente utilizando el protocolo HTTP/2 y Protocol Buffers, proporcionando un rendimiento mejorado para la comunicación de microservicios."
+  },
+  "apiOverview": {
+    "title": "Visión general del protocolo API",
+    "rest": {
+      "title": "Representational State Transfer (REST)",
+      "description": "REST es una arquitectura de desarrollo de API que proporciona comunicación cliente-servidor sobre el protocolo HTTP. Introducido por Roy Fielding en 2000, REST utiliza HTTP/1.1 para enviar datos entre clientes y servidores. Cada servicio suele tener endpoints específicos para la interacción y el intercambio de datos.",
+      "keyFeatures": "Características clave:",
+      "features": [
+        "Métodos HTTP: GET, POST, PUT, DELETE",
+        "Múltiples endpoints por recurso",
+        "Formatos de datos JSON/XML",
+        "Comunicación sin estado"
+      ],
+      "advantages": "Ventajas:",
+      "advantagesList": [
+        "Sencillo y ampliamente comprendido",
+        "Excelente soporte de caching",
+        "Ecosistema de herramientas maduro",
+        "Funciones nativas de HTTP"
+      ]
+    },
+    "graphql": {
+      "title": "GraphQL",
+      "description": "GraphQL es un lenguaje de consulta para APIs creado por Facebook para la comunicación cliente-servidor. Los clientes solicitan datos según se necesite mediante consultas, y los servidores devuelven respuestas de acuerdo a las especificaciones de la consulta. GraphQL se desarrolló para manejar requisitos de datos complejos y superar los problemas de sobrecarga y falta de datos de REST.",
+      "keyFeatures": "Características clave:",
+      "features": [
+        "Un solo endpoint para todas las operaciones",
+        "Requisitos de datos especificados por el cliente",
+        "Sistema de tipos fuerte",
+        "Suscripciones en tiempo real"
+      ],
+      "advantages": "Ventajas:",
+      "advantagesList": [
+        "Elimina la sobrecarga/falta de datos",
+        "Consultas de datos flexibles",
+        "Herramientas de desarrollo potentes",
+        "Introspección de esquemas"
+      ]
+    },
+    "grpc": {
+      "title": "Google Remote Procedure Call (gRPC)",
+      "description": "gRPC es un marco de alto rendimiento de código abierto para construir sistemas distribuidos y microservicios eficientes. Desarrollado por Google, permite comunicación independiente del lenguaje y la plataforma usando Protocol Buffers y el protocolo HTTP/2 con características como streaming bidireccional y multiplexación.",
+      "keyFeatures": "Características clave:",
+      "features": [
+        "Protocolo HTTP/2",
+        "Serialización con Protocol Buffers",
+        "Streaming bidireccional",
+        "Independiente del lenguaje"
+      ],
+      "advantages": "Ventajas:",
+      "advantagesList": [
+        "Alto rendimiento",
+        "Serialización eficiente",
+        "Tipado fuerte",
+        "Soporte de streaming"
+      ]
+    }
+  },
+  "methodology": {
+    "title": "Arquitectura del sistema y metodología",
+    "experimentalSetup": "Configuración experimental",
+    "setupContent": "La evaluación de rendimiento se llevó a cabo utilizando una arquitectura de microservicios implementada en Golang, basada en un estudio de caso de un sistema de información educativa. La arquitectura del sistema consta de tres servicios implementados en contenedores separados:",
+    "services": [
+      "Servicios de autenticación",
+      "Servicio de perfiles de docentes (recuperación de datos planos)",
+      "Servicio de perfiles de docentes con formación educativa (recuperación de datos anidados)"
+    ],
+    "databaseConfig": "Configuración de la base de datos",
+    "databaseContent": "Cada servicio utiliza tanto bases de datos Redis como MySQL, con MySQL como almacenamiento a largo plazo y Redis como sistema de caché en memoria para acceso de baja latencia. La evaluación examina dos patrones distintos de recuperación de datos: datos planos (estructuras simples de clave-valor) y datos anidados (estructuras jerárquicas con relaciones).",
+    "testingMethodology": "Metodología de prueba",
+    "testingDescription": "Las pruebas de rendimiento se realizaron con Apache JMeter para pruebas de carga, evaluando tanto patrones de solicitudes concurrentes como consecutivas. Los escenarios de prueba incluyeron:",
+    "testingScenarios": [
+      "Cargas de solicitudes de 100 a 500 solicitudes",
+      "Escenarios de recuperación de datos planos y anidados",
+      "Mediciones de tiempo de respuesta y utilización de CPU",
+      "Diez iteraciones por prueba para precisión estadística"
+    ]
+  },
+  "performanceResults": {
+    "title": "Resultados y análisis de rendimiento",
+    "responseTime": {
+      "title": "Rendimiento de tiempo de respuesta",
+      "flatData": {
+        "title": "Recuperación de datos planos",
+        "description": "Para la recuperación de datos planos bajo condiciones de carga concurrente, los resultados de rendimiento muestran distinciones claras:",
+        "grpc": {
+          "label": "gRPC (Mejor)",
+          "performance": "233,84 ms - 2 606,59 ms",
+          "range": "100-500 solicitudes"
+        },
+        "rest": {
+          "label": "REST (Moderado)",
+          "performance": "1 113,33 ms - 4 009,83 ms",
+          "range": "100-500 solicitudes"
+        },
+        "graphql": {
+          "label": "GraphQL (Más lento)",
+          "performance": "3 852,07 ms - 21 148,14 ms",
+          "range": "100-500 solicitudes"
+        }
+      },
+      "nestedData": {
+        "title": "Recuperación de datos anidados",
+        "description": "Para la recuperación de datos anidados, las características de rendimiento cambian, con REST mostrando un rendimiento competitivo:",
+        "rest": {
+          "label": "REST (Mejor)",
+          "performance": "5 201,39 ms - 16 646,55 ms",
+          "range": "100-500 solicitudes"
+        },
+        "grpc": {
+          "label": "gRPC (Moderado)",
+          "performance": "5 667,33 ms - 14 962,61 ms",
+          "range": "100-500 solicitudes"
+        },
+        "graphql": {
+          "label": "GraphQL (Más lento)",
+          "performance": "8 510,84 ms - 29 734,59 ms",
+          "range": "100-500 solicitudes"
+        }
+      }
+    },
+    "cpuUtilization": {
+      "title": "Análisis de utilización de CPU",
+      "flatData": {
+        "title": "Uso de CPU de datos planos",
+        "description": "Los patrones de utilización de CPU revelan diferencias significativas en el consumo de recursos:",
+        "rest": {
+          "label": "REST (Más eficiente)",
+          "performance": "10,26 % - 48,90 %",
+          "range": "100-500 solicitudes"
+        },
+        "grpc": {
+          "label": "gRPC (Moderado)",
+          "performance": "10,95 % - 36,11 %",
+          "range": "100-500 solicitudes"
+        },
+        "graphql": {
+          "label": "GraphQL (Intensivo en recursos)",
+          "performance": "120,09 % - 142,15 %",
+          "range": "Uso multinúcleo"
+        }
+      },
+      "nestedData": {
+        "title": "Uso de CPU de datos anidados",
+        "description": "Para escenarios de datos anidados, la utilización de CPU aumenta en todos los protocolos, con GraphQL mostrando el mayor consumo de recursos:",
+        "rest": {
+          "label": "REST (Más eficiente)",
+          "performance": "38,23 % - 123,01 %",
+          "range": "100-500 solicitudes"
+        },
+        "grpc": {
+          "label": "gRPC (Moderado)",
+          "performance": "30,11 % - 84,04 %",
+          "range": "100-500 solicitudes"
+        },
+        "graphql": {
+          "label": "GraphQL (Intensivo en recursos)",
+          "performance": "100 %+ - 177,41 %",
+          "range": "Uso intensivo multinúcleo"
+        }
+      }
+    },
+    "consecutiveRequest": {
+      "title": "Rendimiento de solicitudes consecutivas",
+      "description": "En pruebas de solicitudes consecutivas durante períodos de cinco minutos, gRPC demostró constantemente un rendimiento superior en todos los escenarios:",
+      "scenarios": [
+        "Datos planos (100 solicitudes): gRPC 79,90 ms, REST 152,56 ms, GraphQL 196,90 ms",
+        "Datos planos (500 solicitudes): gRPC 67,75 ms, REST 149,68 ms, GraphQL 204,35 ms",
+        "Datos anidados (100 solicitudes): gRPC 437,03 ms, REST 510,47 ms, GraphQL 589,25 ms",
+        "Datos anidados (500 solicitudes): gRPC 748,22 ms, REST 798,41 ms, GraphQL 1 035,46 ms"
+      ],
+      "conclusion": "Estos resultados demuestran la ventaja de rendimiento consistente de gRPC, especialmente bajo condiciones de carga sostenida."
+    }
+  },
+  "keyFindings": {
+    "title": "Hallazgos clave e implicaciones",
+    "performanceCharacteristics": {
+      "title": "Características de rendimiento",
+      "grpcAdvantages": {
+        "title": "Ventajas de gRPC",
+        "advantages": [
+          "Tiempos de respuesta consistentemente más rápidos",
+          "Beneficios de HTTP/2 (multiplexación, streaming)",
+          "Serialización eficiente con Protocol Buffers",
+          "Excelente para comunicación interna de alta frecuencia"
+        ]
+      },
+      "restStrengths": {
+        "title": "Fortalezas de REST",
+        "strengths": [
+          "Menor utilización de CPU",
+          "Excelente soporte de caching HTTP",
+          "Sencillo y ampliamente comprendido",
+          "Ecosistema de herramientas maduro"
+        ]
+      }
+    },
+    "graphqlConsiderations": {
+      "title": "Consideraciones de GraphQL",
+      "description": "Aunque GraphQL ofrece importantes ventajas de flexibilidad, el análisis de rendimiento revela consideraciones clave:",
+      "considerations": [
+        "Tiempos de respuesta más altos, especialmente bajo carga",
+        "Utilización de CPU significativamente mayor (a menudo supera el 100 %)",
+        "Sobrecarga de análisis y resolución de consultas",
+        "Requisitos de caching complejos"
+      ],
+      "conclusion": "A pesar de las compensaciones de rendimiento, GraphQL sigue siendo valioso para escenarios que requieren obtención de datos flexible y requisitos complejos del cliente."
+    }
+  },
+  "recommendations": {
+    "title": "Recomendaciones arquitectónicas",
+    "protocolSelection": {
+      "title": "Directrices de selección de protocolo",
+      "grpc": {
+        "title": "Elija gRPC para:",
+        "scenarios": [
+          "Comunicación interna de microservicios de alto rendimiento",
+          "Requisitos de baja latencia",
+          "Escenarios de streaming de datos",
+          "Entornos poliglota con necesidades de tipado fuerte"
+        ]
+      },
+      "rest": {
+        "title": "Elija REST para:",
+        "scenarios": [
+          "APIs públicas",
+          "Operaciones CRUD simples",
+          "Entornos con recursos limitados",
+          "Cuando el caching HTTP sea crítico"
+        ]
+      },
+      "graphql": {
+        "title": "Elija GraphQL para:",
+        "scenarios": [
+          "Requisitos de datos complejos del cliente",
+          "Aplicaciones móviles con restricciones de ancho de banda",
+          "Capa de gateway de API y agregación de datos",
+          "Cuando la flexibilidad de consultas pese más que el costo de rendimiento"
+        ]
+      }
+    },
+    "hybridArchitecture": {
+      "title": "Enfoque de arquitectura híbrida",
+      "description": "Las arquitecturas más efectivas suelen emplear múltiples protocolos de forma estratégica:",
+      "approaches": [
+        "gRPC para la comunicación interna entre servicios",
+        "REST para APIs públicas y operaciones sencillas",
+        "GraphQL para agregación de datos y consultas complejas en el cliente"
+      ]
+    }
+  },
+  "conclusion": {
+    "title": "Conclusión",
+    "description": "Esta evaluación de rendimiento integral demuestra que la selección del protocolo de comunicación en microservicios impacta significativamente el rendimiento del sistema. Los resultados proporcionan una guía clara para arquitectos y desarrolladores al tomar decisiones tecnológicas:",
+    "keyTakeaways": {
+      "title": "Puntos clave:",
+      "takeaways": [
+        "gRPC sobresale en rendimiento de tiempo de respuesta en todos los escenarios",
+        "REST ofrece la mejor eficiencia de recursos con la menor utilización de CPU",
+        "GraphQL proporciona flexibilidad pero con un costo de rendimiento significativo",
+        "La elección de protocolo debe alinearse con los requisitos específicos del caso de uso"
+      ]
+    },
+    "http2Benefits": "Las ventajas del protocolo HTTP/2 en gRPC, como multiplexación y serialización eficiente, contribuyen significativamente a sus características de rendimiento superior. Sin embargo, la elección del protocolo de comunicación debería considerar no solo las métricas de rendimiento, sino también factores como la complejidad de desarrollo, la experiencia del equipo, los requisitos del cliente y la mantenibilidad a largo plazo.",
+    "futureConsiderations": "A medida que las arquitecturas de microservicios continúan evolucionando, comprender estas características de rendimiento permite tomar decisiones informadas que equilibren los requisitos de rendimiento con la productividad del desarrollo y la complejidad del sistema. El enfoque óptimo frecuentemente implica aprovechar las fortalezas de múltiples protocolos dentro de una misma arquitectura, en lugar de adoptar una solución única para todos."
+  },
+  "references": {
+    "title": "Referencias",
+    "showMore": "Mostrar más referencias ({count} más)",
+    "showLess": "Mostrar menos referencias"
+  }
+}

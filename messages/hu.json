@@ -1,0 +1,478 @@
+{
+  "title": "REST, GraphQL és gRPC teljesítményértékelése",
+  "research": {
+    "title": "REST, GraphQL és gRPC összehasonlító teljesítményelemzése",
+    "subtitle": "Mikroszolgáltatások közötti kommunikációs architektúrában",
+    "badges": {
+      "readTime": "15 perc olvasás",
+      "performanceStudy": "Teljesítményvizsgálat",
+      "microservices": "Mikroszolgáltatások",
+      "buyMeCoffee": "Vegyél nekem egy kávét"
+    },
+    "summary": {
+      "fastestResponseTime": "Leggyorsabb válaszidő",
+      "gRPC": "gRPC",
+      "gRPCRange": "233 ms – 2,6 s (lapos adatok)",
+      "lowestCPUUsage": "Legalacsonyabb CPU-terhelés",
+      "REST": "REST",
+      "RESTRange": "10% – 49% (lapos adatok)",
+      "highestResourceUsage": "Legnagyobb erőforrás-felhasználás",
+      "GraphQL": "GraphQL",
+      "GraphQLRange": "CPU 120% – 177%"
+    },
+    "overview": {
+      "title": "Áttekintés",
+      "content": "A modern elosztott rendszerek egyre inkább mikroszolgáltatás-architektúrát alkalmaznak a robusztus és könnyen karbantartható alkalmazások építéséhez. A mikroszolgáltatások közötti kommunikációs protokoll kiválasztása döntő hatással van a teljes rendszer hatékonyságára. Ez a kutatás három elterjedt API-kommunikációs módszer — REST, GraphQL és gRPC — teljesítményjellemzőit hasonlítja össze mikroszolgáltatás-környezetben. Kísérleti környezetünk három konténerizált mikroszolgáltatásból áll, Redis és MySQL adatbázisokkal. A teljesítményt két kulcsfontosságú metrika, a válasz-késleltetés és a CPU-kihasználtság alapján értékeltük. Két adatlekérési mintát vizsgáltunk: egyszerű lapos adatok és összetett, beágyazott adatok, 100–500 egyidejű kérés terhelés mellett. Az eredmények azt mutatják, hogy a gRPC nyújtja a legjobb válaszidőt, a REST közepes teljesítményt, míg a GraphQL-nek a legmagasabb a késleltetése. Emellett a GraphQL jóval nagyobb CPU-terhelést generál, mint a gRPC és a REST. Ezek a megállapítások értékes útmutatást nyújtanak a rendszerarchitektek és fejlesztők számára a mikroszolgáltatás-kiépítések optimális kommunikációs stratégiáinak kiválasztásához."
+    },
+    "background": {
+      "title": "Hátter és motiváció",
+      "paragraph1": "A szoftvermérnökség fejlődése során a mikroszolgáltatás-architektúra új paradigma lett a monolitikus alkalmazások kisebb, autonóm szolgáltatásokra bontására. Ez az irányzat lehetővé teszi, hogy minden szolgáltatás önállóan fejleszthető, telepíthető és skálázható legyen anélkül, hogy befolyásolná a többi rendszerkomponenst. Ezáltal a fejlesztőcsapatok specifikus funkcionális területekre összpontosíthatnak, ami növeli a skálázhatóságot, felgyorsítja a fejlesztést és javítja a hibaisolációt.",
+      "paragraph2": "A mikroszolgáltatás-ökorendszerben két kiemelkedő kommunikációs protokoll terjedt el széles körben: a Representational State Transfer (REST) és a Graph Query Language (GraphQL). A REST alaptechnológiává vált az adatok elérésében és manipulálásában, elkülönült végpontokat alkalmazva. Népszerűsége ellenére a REST korlátokkal is rendelkezik, például felesleges vagy hiányos adatkéréseket generálhat. A GraphQL ezeket a hiányosságokat küszöböli ki, mivel a kliens pontosan meg tudja határozni, milyen adatokat szeretne visszakapni, ezzel hatékonyabbá téve a kommunikációt és jobb kontrollt adva a fejlesztők kezébe.",
+      "paragraph3": "A REST és a GraphQL mellett a Google Remote Procedure Call (gRPC) is egyre nagyobb népszerűségnek örvend innovatív adatcsere-megoldásként. A gRPC egy rugalmas és nagy teljesítményű keretrendszert kínál szolgáltatások közötti kommunikációhoz elosztott architektúrákban. Míg a REST és a GraphQL HTTP/1-en alapul, addig a gRPC a HTTP/2 fejlett képességeit (pl. beépített streaming) használja ki. A gRPC megkönnyíti a távoli eljáráshívásokat különböző programozási nyelvek között, javítva a teljesítményt és csökkentve a késleltetést mikroszolgáltatás-kommunikációs forgatókönyvekben."
+    },
+    "literatureReview": {
+      "title": "Irodalom áttekintés",
+      "paragraph1": "Számos kutatás vizsgálta a REST és GraphQL implementációk teljesítményjellemzőit. Különböző tanulmányok elemezték ezeket a protokollokat API-gateway környezetben, mind írási, mind olvasási műveleteket vizsgálva. Az eredmények rámutattak az egyes megközelítések erősségeire és korlátaira. Gyakran előfordul, hogy olyan alkalmazásoknál, melyeknek hatékonyan kell kezelniük gyakran változó adatokat, a GraphQL bizonyul kedvezőbbnek.",
+      "paragraph2": "Az összehasonlító elemzések az API-tervezési módszertanokra fókuszáltak, gyakorlati implementációk segítségével vizsgálva a válaszidőt és a payload méretét. Node.js alapú CRUD-műveleteket végző MongoDB-s alkalmazásokon végzett kutatások finom teljesítménybeli különbségeket tártak fel. Egyszerű lekérdezések esetén a különbségek minimálisak, de magas terhelés mellett a GraphQL előnyt mutat szelektív adatigényeknél, míg a REST nagyobb adatok átvitelénél nyújt jobb teljesítményt.",
+      "paragraph3": "Jelen vizsgálatunk átfogóan hasonlítja össze a REST, GraphQL és gRPC protokollokat mikroszolgáltatás-környezetben, és gyakorlati betekintést nyújt a rendszerarchitekteknek és fejlesztőknek a különböző működési forgatókönyvek és terhelési jellemzők szerinti optimális kommunikációs protokoll kiválasztásához."
+    },
+    "protocolsOverview": {
+      "title": "Kommunikációs protokollok áttekintése",
+      "introduction": "Az API-protokollok szabványos keretet, konvenciókat és specifikációkat határoznak meg a különböző szoftveralkalmazások és elosztott rendszerek közötti zökkenőmentes kommunikációhoz és integrációhoz. Ezek a protokollok definiálják a kérések és válaszok szerkezetét, formátumát, valamint a rendszerek közötti adatátvitel módszereit és szabályait.",
+      "table": {
+        "protocol": "Protokoll",
+        "httpVersion": "HTTP-verzió",
+        "dataFormat": "Adatformátum",
+        "keyFeatures": "Fő jellemzők",
+        "rest": {
+          "httpVersion": "HTTP/1.1",
+          "dataFormat": "JSON, XML",
+          "features": "Állapotmentes, gyorsítótárazható, egyszerű"
+        },
+        "graphql": {
+          "httpVersion": "HTTP/1.1",
+          "dataFormat": "JSON",
+          "features": "Lekérdezőnyelv, rugalmas adatlekérés"
+        },
+        "grpc": {
+          "httpVersion": "HTTP/2",
+          "dataFormat": "Protocol Buffers",
+          "features": "Streaming, multiplexálás, típusbiztonság"
+        }
+      },
+      "rest": {
+        "title": "A. Representational State Transfer (REST)",
+        "description": "A REST egy olyan architekturális keret az API-fejlesztéshez, amely HTTP-protokollon keresztül teszi lehetővé a kliens-szerver kommunikációt. Eredetileg Roy Fielding doktorjelölt munkájában fogalmazták meg 2000-ben a Kaliforniai Egyetemen. A REST HTTP/1.1-et használ az adatok átvitelére, és általában dedikált végpontokat implementálnak a mikroszolgáltatások közötti kommunikációhoz és adatcseréhez."
+      },
+      "graphql": {
+        "title": "B. Graph Query Language (GraphQL)",
+        "description": "A GraphQL egy lekérdezőnyelv, amelyet kifejezetten API-interakciókra terveztek, és amelyet a Facebook fejlesztett ki kliens-szerver kommunikációra. A kliensek strukturált lekérdezésekkel pontosan megadhatják az igényelt adatokat, és a szerverek olyan válaszokat szolgáltatnak, amelyek megfelelnek ezeknek a specifikációknak. A GraphQL innovatív alternatívát jelent a REST-tel szemben, mivel lehetővé teszi a fejlesztők számára, hogy hatékonyan és rugalmasan kérjenek le célzott adatokat."
+      },
+      "grpc": {
+        "title": "C. Google Remote Procedure Call (gRPC)",
+        "description": "A gRPC egy nyílt forráskódú, nagy teljesítményű keretrendszer, amelyet hatékony elosztott rendszerek és mikroszolgáltatás-architektúrák építésére fejlesztett a Google. A gRPC platformfüggetlen, nyelvsemleges kommunikációt tesz lehetővé alkalmazások és szolgáltatások között. A keretrendszer a Protocol Buffers (protobufs) nyelvi semleges interfészdefiníciós nyelvet használja, lehetővé téve a szolgáltatások metódusainak és adattípusainak szigorú típusellenőrzéssel történő definiálását."
+      }
+    },
+    "architecture": {
+      "title": "Kísérleti architektúra és megvalósítás",
+      "introduction": "A kísérleti megvalósítás Go-alapú mikroszolgáltatásokat alkalmazott, inspirálódva az indonéz Oktatási és Kulturális Minisztérium SISTER (Integrated Education Information System) rendszerének esettanulmányából. Ez az átfogó rendszer kezeli az oktatási szektor forrásait, kutatási tevékenységeit és humán erőforrás adatait több szervezeti szinten.",
+      "systemComponents": {
+        "title": "A rendszerarchitektúra elemei",
+        "authService": {
+          "title": "Hitelesítő szolgáltatás",
+          "description": "Felhasználói hitelesítés és jogosultságkezelés"
+        },
+        "lecturerService": {
+          "title": "Oktatói profil szolgáltatás",
+          "description": "Lapos adatok lekérdezése (oktatói profilok)"
+        },
+        "educationService": {
+          "title": "Oktatási háttér szolgáltatás",
+          "description": "Beágyazott adatok lekérdezése (profil + oktatás)"
+        }
+      },
+      "database": {
+        "title": "Adatbázis-konfiguráció",
+        "mysql": "MySQL: tartós tárolási megoldás",
+        "redis": "Redis: memóriában gyorsítótárazott rendszer",
+        "dataVolume": "Adatmennyiség: 2 221 oktatói profil",
+        "extendedData": "Kiterjesztett adatok: 6 197 profil oktatási háttérrel"
+      },
+      "dataRetrieval": {
+        "title": "Adatlekérési folyamat",
+        "primaryFetch": "Elsődleges lekérdezés Redis-gyorsítótárból",
+        "fallback": "Gyorsítótár hiba esetén visszaesés MySQL-hez",
+        "cachePopulation": "Gyorsítótár feltöltése MySQL lekérdezés után",
+        "optimized": "Alacsony késleltetésre optimalizálva"
+      },
+      "dataStructures": {
+        "flatData": {
+          "title": "Lapos adatstruktúra"
+        },
+        "nestedData": {
+          "title": "Beágyazott adatstruktúra"
+        }
+      }
+    },
+    "performance": {
+      "title": "Teljesítményelemzés és eredmények",
+      "introduction": "Átfogó teljesítményértékelést végeztünk az adatlekérési terhelés hatásának vizsgálatára a válasz-késleltetésre és a számítási erőforrások használatára. Ez a keretrendszer azt célozta meg, hogy meghatározza a leghatékonyabb adatcserélési megközelítéseket egyszerű lapos és összetett beágyazott adatok esetén. Az Apache JMeter szolgált elsődleges eszközként az API-terheléses tesztekhez és a teljesítménymérésekhez.",
+      "concurrent": {
+        "title": "A. Egyidejű kérések értékelése",
+        "colorCoding": {
+          "title": "Protokoll színkódolás"
+        },
+        "responseTime": {
+          "flatData": "Válaszidő – lapos adatok",
+          "nestedData": "Válaszidő – beágyazott adatok"
+        },
+        "cpuUtilization": {
+          "flatData": "CPU-kihasználtság – lapos adatok",
+          "nestedData": "CPU-kihasználtság – beágyazott adatok"
+        },
+        "keyFindings": {
+          "responseTime": {
+            "title": "Legfontosabb eredmények – válaszidő:",
+            "simpleData": "Lapos adatok: gRPC optimális (233–2 606 ms), REST közepes (1 113–4 009 ms), GraphQL leglassabb (3 852–21 148 ms)",
+            "complexData": "Beágyazott adatok: REST vezet (5 201–16 646 ms), gRPC közepes (5 667–14 962 ms), GraphQL leglassabb (8 510–29 734 ms)"
+          },
+          "cpuUtilization": {
+            "title": "Legfontosabb eredmények – CPU-kihasználtság:",
+            "simpleData": "Lapos adatok: REST minimális (10–48%), gRPC közepes (10–36%), GraphQL maximális (120–142%)",
+            "complexData": "Beágyazott adatok: gRPC hatékony (30–84%), REST mérsékelt (38–123%), GraphQL intenzív (100–177%)"
+          }
+        }
+      },
+      "sustained": {
+        "title": "B. Hosszabb idejű kérések értékelése (5 percig)",
+        "responseTime": {
+          "flatData": "Folyamatos válaszidő – lapos adatok",
+          "nestedData": "Folyamatos válaszidő – beágyazott adatok"
+        },
+        "cpuUtilization": {
+          "flatData": "Folyamatos CPU-kihasználtság – lapos adatok"
+        },
+        "results": {
+          "title": "Folyamatos Tesztelési Eredmények:",
+          "point1": "a gRPC következetesen a leggyorsabb 5 perces tartós tesztekben",
+          "point2": "a REST stabil teljesítményt tart fenn különböző kérési volumenek mellett",
+          "point3": "a GraphQL a legmagasabb erőforrás-fogyasztást mutatja tartós műveletekben",
+          "point4": "a gRPC HTTP/2 előnye még nyilvánvalóbbá válik tartós terheléseknél"
+        }
+      },
+      "charts": {
+        "concurrentRequests": "Egyidejű kérések",
+        "responseTimeMs": "Válaszidő (ms)",
+        "cpuUtilizationPercent": "CPU-kihasználtság (%)",
+        "requestsLabel": "{count} kérés"
+      }
+    },
+    "findings": {
+      "title": "Megállapítások és ajánlások",
+      "paragraph1": "A modern elosztott rendszerek többsége mikroszolgáltatás-mintákat alkalmaz a skálázható és karbantartható szoftvermegoldások fejlesztéséhez. A szolgáltatások közötti kommunikációs protokollok stratégiai kiválasztása kritikus tényező a rendszer optimális teljesítményének elérésében. Ez a kutatás átfogó értékelést nyújt a REST, gRPC és GraphQL API-protokollok teljesítményéről mikroszolgáltatás-architektúrákban, Redis és MySQL adatbázistechnológiák alkalmazásával.",
+      "paragraph2": "Vizsgálatunk két eltérő adatlekérési mintára összpontosított: egyszerű lapos adatok és bonyolult beágyazott adatok. A válaszidő és a CPU-kihasználtság metrikáin alapuló teljesítményelemzés mindkét esetben azt mutatta, hogy a gRPC nyújtja a legjobb válaszidőket, míg a REST a legkisebb erőforrás-felhasználást biztosítja a gRPC-hez és a GraphQL-hez képest.",
+      "recommendations": {
+        "title": "Fő ajánlások:",
+        "grpc": "Legalkalmasabb a leggyorsabb válaszidők és nagy áteresztőképességű alkalmazások esetén",
+        "rest": "Optimális erőforrás-korlátozott környezetekben és egyszerű CRUD-műveletekhez",
+        "graphql": "Megfontoltan válasszuk, mivel nagyobb erőforrás-felhasználással jár; alkalmas összetett adatigényekhez"
+      }
+    },
+    "support": {
+      "title": "Támogasd munkámat",
+      "subtitle": "Hasznosnak találtad ezt az elemzést az architektúra-döntésekhez?",
+      "description": "Segíts, hogy továbbra is átfogó technikai tartalmakat és nyílt forráskódú hozzájárulásokat készíthessek a fejlesztői közösség számára.",
+      "buyMeCoffee": "Vegyél nekem egy kávét",
+      "connectLinkedIn": "Csatlakozz LinkedIn-en"
+    },
+    "references": {
+      "title": "Referenciák",
+      "showMore": "Összes hivatkozás megtekintése ({count})",
+      "showLess": "Kevesebb hivatkozás megtekintése"
+    },
+    "footer": {
+      "createdBy": "Készítette"
+    }
+  },
+  "atGlance": {
+    "title": "Áttekintés",
+    "executiveSummary": "Vezetői összefoglaló",
+    "content": "A mikroszolgáltatás-architektúra a skálázható és karbantartható rendszerek tervezésének fő paradigmájává vált. A megfelelő kommunikációs protokoll kiválasztása kritikus az optimális teljesítmény eléréséhez. Ez az elemzés összehasonlítja a REST, GraphQL és gRPC három gyakran használt API-protokoll teljesítményét mikroszolgáltatás-környezetben. A vizsgálat két kulcsfontosságú teljesítménymutatót használ: válaszidő és CPU-kihasználtság, lapos és beágyazott adatlekérési forgatókönyvekkel 100–500 kérés között. Az eredmények szerint a gRPC rendelkezik a legjobb válaszidőkkel, ezt követi a REST, a GraphQL pedig a legmagasabb késleltetéssel és CPU-terheléssel."
+  },
+  "introduction": {
+    "title": "Bevezetés",
+    "modernArchitecture": "Modern szoftverarchitektúra",
+    "modernContent": "A modern szoftverfejlesztés alapvetően megváltoztatta az alkalmazások tervezését a mikroszolgáltatások alkalmazásával. Ez az architektúra azt javasolja, hogy a komplex alkalmazásokat kisebb, önálló mikroszolgáltatásokra bontsuk, amelyek külön felelősségi körrel rendelkeznek és függetlenül kezelhetők. Ez a megközelítés lehetővé teszi a fejlesztőcsapatok számára, hogy bizonyos alkalmazás-részekre fókuszáljanak, javítva a skálázhatóságot, gyorsítva a változtatásokat és jobb hibaizolációt biztosítva."
+  },
+  "protocolIntroduction": {
+    "title": "Az API-kommunikációs protokollok bemutatása",
+    "protocolLandscape": "Protokoll-térkép",
+    "protocolContent": "A mikroszolgáltatások közötti kommunikációban három protokoll emelkedett ki: Representational State Transfer (REST), Graph Query Language (GraphQL) és Google Remote Procedure Call (gRPC). Mindegyik különböző előnyöket és kompromisszumokat kínál az eltérő felhasználási esetek és teljesítménykövetelmények számára.",
+    "comparisonOverview": "Protokoll-összehasonlítás",
+    "comparisonContent": "A REST több végpontot használ az adatok eléréséhez és manipulálásához, de túl- vagy alulpörgetést eredményezhet. A GraphQL lehetővé teszi, hogy a kliens pontosan megadja, milyen adatokat szeretne, így hatékonyabbá téve a kéréseket. A gRPC HTTP/2-t és Protocol Buffers-t alkalmazva kiemelkedő teljesítményt nyújt a mikroszolgáltatás-kommunikációban."
+  },
+  "apiOverview": {
+    "title": "API-protokollok áttekintése",
+    "rest": {
+      "title": "Representational State Transfer (REST)",
+      "description": "A REST egy API-fejlesztési architektúra, amely HTTP-protokollon keresztül biztosít kliens-szerver kommunikációt. 2000-ben Roy Fielding dolgozta ki, és HTTP/1.1-et használ az adatok továbbítására. A szolgáltatások tipikusan dedikált végpontokat kínálnak az interakciókhoz és adatcseréhez.",
+      "keyFeatures": "Fő jellemzők:",
+      "features": [
+        "HTTP metódusok: GET, POST, PUT, DELETE",
+        "Több végpont erőforrásonként",
+        "JSON/XML formátum",
+        "Állapotmentes kommunikáció"
+      ],
+      "advantages": "Előnyök:",
+      "advantagesList": [
+        "Egyszerű és széles körben ismert",
+        "Kiváló gyorsítótárazási támogatás",
+        "Érett eszközkészlet",
+        "HTTP-n belüli funkcionalitás"
+      ]
+    },
+    "graphql": {
+      "title": "GraphQL",
+      "description": "A GraphQL egy Facebook által kifejlesztett lekérdezőnyelv API-khoz. A kliensek strukturált lekérdezések segítségével pontosan megadhatják az igényelt adatokat, és a szerverek az igényeknek megfelelően válaszolnak. A GraphQL a REST adatkérésekkel kapcsolatos túl- és alulkérések problémáit oldja meg.",
+      "keyFeatures": "Fő jellemzők:",
+      "features": [
+        "Egyetlen végpont minden művelethez",
+        "Kliens által meghatározott adatigény",
+        "Erős típusrendszer",
+        "Valós idejű feliratkozások"
+      ],
+      "advantages": "Előnyök:",
+      "advantagesList": [
+        "Kiküszöböli a túl- és alulkérést",
+        "Rugalmas lekérdezések",
+        "Erős fejlesztői eszközök",
+        "Séma introspekció"
+      ]
+    },
+    "grpc": {
+      "title": "gRPC",
+      "description": "A gRPC egy nyílt forráskódú, nagy teljesítményű keretrendszer, amelyet a Google fejlesztett ki elosztott rendszerek és mikroszolgáltatások építéséhez. Platform- és nyelvfüggetlen kommunikációt tesz lehetővé HTTP/2 és Protocol Buffers használatával, támogatva a kétirányú streaminget és a multiplexálást.",
+      "keyFeatures": "Fő jellemzők:",
+      "features": [
+        "HTTP/2 protokoll",
+        "Protocol Buffers szerializáció",
+        "Kétirányú streaming",
+        "Nyelvfüggetlen kommunikáció"
+      ],
+      "advantages": "Előnyök:",
+      "advantagesList": [
+        "Magas teljesítmény",
+        "Hatékony szerializáció",
+        "Erős típusosság",
+        "Streaming támogatás"
+      ]
+    }
+  },
+  "methodology": {
+    "title": "Rendszerarchitektúra és módszertan",
+    "experimentalSetup": "Kísérleti környezet",
+    "setupContent": "A teljesítményértékelés Golang alapú mikroszolgáltatás-architektúrán történt, az indonéz Oktatási és Kulturális Minisztérium SISTER rendszerének esettanulmányát követve. A rendszer három külön konténerben futó szolgáltatásból áll:",
+    "services": [
+      "Hitelesítési szolgáltatás",
+      "Oktatói profil szolgáltatás (lapos adatok)",
+      "Oktatói profil szolgáltatás oktatási háttérrel (beágyazott adatok)"
+    ],
+    "databaseConfig": "Adatbázis konfiguráció",
+    "databaseContent": "Minden szolgáltatás Redis és MySQL adatbázist használ, ahol a MySQL a tartós tárolást, a Redis pedig az in-memory gyorsítótárazást szolgálja. Két adatlekérési mintát teszteltünk: lapos és beágyazott adatokat.",
+    "testingMethodology": "Tesztelési módszertan",
+    "testingDescription": "Az Apache JMeter segítségével végzett terheléses tesztek során egyidejű és folyamatos kéréseket értékeltünk. A tesztszcenáriók:"
+  },
+  "performanceResults": {
+    "title": "Teljesítmény eredmények és elemzés",
+    "responseTime": {
+      "title": "Válaszidő teljesítmény",
+      "flatData": {
+        "title": "Lapos adatok lekérdezése",
+        "description": "Egyidejű terhelés alatt a teljesítmény világos különbségeket mutat:",
+        "grpc": {
+          "label": "gRPC (Legjobb)",
+          "performance": "233,84 ms – 2 606,59 ms",
+          "range": "100–500 kérés"
+        },
+        "rest": {
+          "label": "REST (Közepes)",
+          "performance": "1 113,33 ms – 4 009,83 ms",
+          "range": "100–500 kérés"
+        },
+        "graphql": {
+          "label": "GraphQL (Leglassabb)",
+          "performance": "3 852,07 ms – 21 148,14 ms",
+          "range": "100–500 kérés"
+        }
+      },
+      "nestedData": {
+        "title": "Beágyazott adatok lekérdezése",
+        "description": "Beágyazott adatok esetén a REST versenyképes teljesítményt mutat:",
+        "rest": {
+          "label": "REST (Legjobb)",
+          "performance": "5 201,39 ms – 16 646,55 ms",
+          "range": "100–500 kérés"
+        },
+        "grpc": {
+          "label": "gRPC (Közepes)",
+          "performance": "5 667,33 ms – 14 962,61 ms",
+          "range": "100–500 kérés"
+        },
+        "graphql": {
+          "label": "GraphQL (Leglassabb)",
+          "performance": "8 510,84 ms – 29 734,59 ms",
+          "range": "100–500 kérés"
+        }
+      }
+    },
+    "cpuUtilization": {
+      "title": "CPU-kihasználtság elemzés",
+      "flatData": {
+        "title": "Lapos adatok CPU-használata",
+        "description": "A CPU-felhasználási minták jelentős különbségeket mutatnak:",
+        "rest": {
+          "label": "REST (Leghatékonyabb)",
+          "performance": "10,26% – 48,90%",
+          "range": "100–500 kérés"
+        },
+        "grpc": {
+          "label": "gRPC (Közepes)",
+          "performance": "10,95% – 36,11%",
+          "range": "100–500 kérés"
+        },
+        "graphql": {
+          "label": "GraphQL (Erőforrás-igényes)",
+          "performance": "120,09% – 142,15%",
+          "range": "Többmagos"
+        }
+      },
+      "nestedData": {
+        "title": "Beágyazott adatok CPU-használata",
+        "description": "Beágyazott adatoknál mindhárom protokollnál nő a CPU-használat, a GraphQL esetén a legmagasabb:",
+        "rest": {
+          "label": "REST (Leghatékonyabb)",
+          "performance": "38,23% – 123,01%",
+          "range": "100–500 kérés"
+        },
+        "grpc": {
+          "label": "gRPC (Közepes)",
+          "performance": "30,11% – 84,04%",
+          "range": "100–500 kérés"
+        },
+        "graphql": {
+          "label": "GraphQL (Erőforrás-igényes)",
+          "performance": "100%+ – 177,41%",
+          "range": "Többmagos"
+        }
+      }
+    },
+    "consecutiveRequest": {
+      "title": "Folyamatos kérések teljesítménye",
+      "description": "Öt perces folyamatos tesztek során a gRPC következetesen jobb teljesítményt nyújtott minden forgatókönyvben:",
+      "scenarios": [
+        "Lapos adatok (100 kérés): gRPC 79,90 ms, REST 152,56 ms, GraphQL 196,90 ms",
+        "Lapos adatok (500 kérés): gRPC 67,75 ms, REST 149,68 ms, GraphQL 204,35 ms",
+        "Beágyazott adatok (100 kérés): gRPC 437,03 ms, REST 510,47 ms, GraphQL 589,25 ms",
+        "Beágyazott adatok (500 kérés): gRPC 748,22 ms, REST 798,41 ms, GraphQL 1 035,46 ms"
+      ],
+      "conclusion": "Ezek az eredmények különösen tartós terhelés alatt is a gRPC előnyét mutatják."
+    }
+  },
+  "keyFindings": {
+    "title": "Fő megállapítások és következtetések",
+    "performanceCharacteristics": {
+      "title": "Teljesítményjegyek",
+      "grpcAdvantages": {
+        "title": "gRPC előnyei",
+        "advantages": [
+          "Konzekvensen a leggyorsabb válaszidők",
+          "HTTP/2 előnyei (multiplexelés, streaming)",
+          "Hatékony Protocol Buffers szerializáció",
+          "Ideális nagy gyakoriságú belső kommunikációhoz"
+        ]
+      },
+      "restStrengths": {
+        "title": "REST erősségei",
+        "strengths": [
+          "Legalacsonyabb CPU-használat",
+          "Kiváló HTTP gyorsítótárazás",
+          "Egyszerű és széles körben ismert",
+          "Érett eszközkészlet"
+        ]
+      }
+    },
+    "graphqlConsiderations": {
+      "title": "GraphQL megfontolások",
+      "description": "A GraphQL nagy rugalmasságot kínál, de az elemzés során a következő szempontok merültek fel:",
+      "considerations": [
+        "Magasabb válaszidő terhelés alatt",
+        "Jelentősen nagyobb CPU-terhelés (gyakran 100% felett)",
+        "Lekérdezés-parsing és feloldás overhead",
+        "Összetett gyorsítótárazási igények"
+      ],
+      "conclusion": "A teljesítmény-kompromisszumok ellenére a GraphQL értékes, ha rugalmas adatlekérésre és összetett kliensigényekre van szükség."
+    }
+  },
+  "recommendations": {
+    "title": "Architekturális ajánlások",
+    "protocolSelection": {
+      "title": "Protokoll-kiválasztási irányelvek",
+      "grpc": {
+        "title": "gRPC választása:",
+        "scenarios": [
+          "Magas teljesítményű szolgáltatás-szolgáltatás kommunikáció",
+          "Alacsony késleltetési követelmények",
+          "Streaming adatforgatókönyvek",
+          "Többnyelvű környezetek, ahol fontos a szigorú típusosság"
+        ]
+      },
+      "rest": {
+        "title": "REST választása:",
+        "scenarios": [
+          "Publikus API-k",
+          "Egyszerű CRUD-műveletek",
+          "Erőforrásokban korlátozott környezetek",
+          "Amikor a HTTP gyorsítótárazás kritikus"
+        ]
+      },
+      "graphql": {
+        "title": "GraphQL választása:",
+        "scenarios": [
+          "Összetett kliensoldali adatigények",
+          "Szélessáv-korlátozott mobilalkalmazások",
+          "API-gateway és adataggrigációs rétegek",
+          "Amikor a lekérdezési rugalmasság fontosabb a teljesítménynél"
+        ]
+      }
+    },
+    "hybridArchitecture": {
+      "title": "Hibrid architektúra megközelítés",
+      "description": "A leghatékonyabb rendszerek gyakran több protokollt kombinálnak stratégiailag:",
+      "approaches": [
+        "gRPC a szolgáltatások közti belső kommunikációhoz",
+        "REST a publikus API-khoz és egyszerű műveletekhez",
+        "GraphQL kliensoldali adataggrigációhoz és összetett lekérdezésekhez"
+      ]
+    }
+  },
+  "conclusion": {
+    "title": "Következtetés",
+    "description": "Ez az átfogó teljesítményértékelés rámutat, hogy a mikroszolgáltatások közti kommunikációs protokoll kiválasztása jelentősen befolyásolja a rendszer teljesítményét. Az eredmények világos útmutatást adnak az architekteknek és fejlesztőknek technológiai döntések meghozatalához:",
+    "keyTakeaways": {
+      "title": "Fő tanulságok:",
+      "takeaways": [
+        "Minden forgatókönyvben a gRPC nyújtja a legjobb válaszidőt",
+        "A REST kínálja a legjobb erőforráshatékonyságot a legalacsonyabb CPU-használattal",
+        "A GraphQL rugalmasságot biztosít, de jelentős teljesítményköltséggel",
+        "A protokollválasztásnak illeszkednie kell az adott használati eset követelményeihez"
+      ]
+    },
+    "http2Benefits": "A HTTP/2 protokoll előnyei — multiplexelés és hatékony szerializáció — jelentősen hozzájárulnak a gRPC kiváló teljesítményéhez. Ugyanakkor a protokollválasztásnál figyelembe kell venni a fejlesztési komplexitást, a csapat szakértelmét, a kliensigényeket és a hosszú távú karbantarthatóságot is.",
+    "futureConsiderations": "Ahogy a mikroszolgáltatás-architektúrák tovább fejlődnek, ezen teljesítményjellemzők ismerete lehetővé teszi a megalapozott döntéshozatalt a teljesítményigények, a fejlesztési termelékenység és a rendszerösszetettség kiegyensúlyozásában. Az optimális megoldás gyakran több protokoll erősségeinek kihasználása egyetlen architektúrában, nem pedig az egyetlen univerzális eszköz választása."
+  },
+  "references": {
+    "title": "Referenciák",
+    "showMore": "További referenciák megjelenítése ({count})",
+    "showLess": "Kevesebb referencia megjelenítése"
+  }
+}

@@ -16,7 +16,7 @@ export function Content({
             {miniHeader}
           </h3>
         )}
-        <p>{children}</p>
+        <div>{children}</div>
       </div>
     </FadeInWhenVisible>
   );

@@ -1,0 +1,484 @@
+{
+  "title": "Leistungsbewertung von REST, GraphQL und gRPC",
+  "research": {
+    "title": "Vergleichende Leistungsanalyse von REST, GraphQL und gRPC",
+    "subtitle": "In der Microservice-Kommunikationsarchitektur",
+    "badges": {
+      "readTime": "15 Min. Lesezeit",
+      "performanceStudy": "Performance-Studie",
+      "microservices": "Microservices",
+      "buyMeCoffee": "Kauf mir einen Kaffee"
+    },
+    "summary": {
+      "fastestResponseTime": "Schnellste Antwortzeit",
+      "gRPC": "gRPC",
+      "gRPCRange": "233 ms – 2,6 s (flat data)",
+      "lowestCPUUsage": "Niedrigste CPU-Auslastung",
+      "REST": "REST",
+      "RESTRange": "10 % – 49 % (flat data)",
+      "highestResourceUsage": "Höchste Ressourcenauslastung",
+      "GraphQL": "GraphQL",
+      "GraphQLRange": "CPU 120 % – 177 %"
+    },
+    "overview": {
+      "title": "Übersicht",
+      "content": "Moderne verteilte Systeme setzen zunehmend auf Microservice-Architekturen, um robuste und wartbare Anwendungen zu erstellen. Die Wahl des Kommunikationsprotokolls zwischen Microservices ist entscheidend für die Gesamteffizienz des Systems. Diese Studie vergleicht die Leistungsmerkmale von drei gängigen API-Kommunikationsmethoden – REST, GraphQL und gRPC – in Microservice-Umgebungen. Unser experimenteller Aufbau besteht aus drei containerisierten Microservices mit Redis- und MySQL-Datenbanken. Bewertet wurden Antwortlatenz und CPU-Auslastung bei zwei Datenzugriffsmustern: einfache flache Datenabfrage und komplexe verschachtelte Datenoperationen, mit 100 bis 500 gleichzeitigen Anfragen. Die Ergebnisse zeigen, dass gRPC die besten Antwortzeiten liefert, REST eine mittlere Performance bietet und GraphQL die höchste Latenz aufweist. Zudem verursacht GraphQL deutlich höhere CPU-Last als REST und gRPC. Diese Erkenntnisse helfen Architekten und Entwicklern bei der optimalen Protokollwahl für Microservice-Deployments."
+    },
+    "background": {
+      "title": "Hintergrund & Motivation",
+      "paragraph1": "Die Softwareentwicklung hat Microservice-Architekturen als wichtigen Ansatz übernommen, um monolithische Anwendungen in kleinere, autonome Services zu zerlegen. Jeder Service übernimmt eine klar definierte Aufgabe und kann unabhängig von anderen Komponenten entwickelt, bereitgestellt und skaliert werden. Das ermöglicht Teams gezielte Fokussierung, schnellere Entwicklungszyklen und bessere Fehlertoleranz.",
+      "paragraph2": "In Microservice-Umgebungen sind zwei Protokolle besonders verbreitet: Representational State Transfer (REST) und Graph Query Language (GraphQL). REST nutzt eigene Endpunkte für Datenzugriff und -manipulation und ist weit verbreitet. Allerdings treten dabei oft Über- oder Unterabrufprobleme auf. GraphQL löst dies, indem Clients genau angeben, welche Daten sie benötigen, und so effizientere Abfragen ermöglichen.",
+      "paragraph3": "Neben REST und GraphQL gewinnt Google Remote Procedure Call (gRPC) an Bedeutung. gRPC nutzt HTTP/2 mit nativer Streaming-Unterstützung und Protocol Buffers für effiziente, typensichere Kommunikation. Dadurch sinkt die Latenz und die Performance steigt, besonders bei serviceinternen Aufrufen."
+    },
+    "literatureReview": {
+      "title": "Literaturübersicht",
+      "paragraph1": "Zahlreiche Studien haben die Performance von REST- und GraphQL-Implementierungen verglichen. In API-Gateway-Szenarien wurde sowohl das Schreiben als auch das Lesen von Daten untersucht und die jeweiligen Stärken und Schwächen herausgearbeitet. Insbesondere bei häufig wechselnden Daten punktet GraphQL oft durch selektive Abfragen.",
+      "paragraph2": "Vergleichende Analysen untersuchten Antwortzeiten und Payload-Größen in praktischen Node.js-CRUD-Anwendungen auf MongoDB. Bei einfachen Abfragen sind die Unterschiede gering, während unter hoher Last GraphQL Vorteile bei gezielten Datenanforderungen zeigt und REST bei umfassenden Datenübertragungen schneller ist.",
+      "paragraph3": "Unsere Studie ergänzt diese Erkenntnisse durch einen umfassenden Performance-Vergleich aller drei Protokolle in einer Microservice-Umgebung und liefert praxisnahe Empfehlungen für unterschiedliche Einsatzszenarien."
+    },
+    "protocolsOverview": {
+      "title": "Überblick Kommunikationsprotokolle",
+      "introduction": "API-Protokolle definieren Standards und Strukturen für Anfragen und Antworten zwischen verteilten Systemen. Sie regeln Format, Routing und Governance für reibungslose Integration.",
+      "table": {
+        "protocol": "Protokoll",
+        "httpVersion": "HTTP-Version",
+        "dataFormat": "Datenformat",
+        "keyFeatures": "Kernfunktionen",
+        "rest": {
+          "httpVersion": "HTTP/1.1",
+          "dataFormat": "JSON, XML",
+          "features": "stateless, cacheable, einfach"
+        },
+        "graphql": {
+          "httpVersion": "HTTP/1.1",
+          "dataFormat": "JSON",
+          "features": "Abfragesprache, flexible Datenabfrage"
+        },
+        "grpc": {
+          "httpVersion": "HTTP/2",
+          "dataFormat": "Protocol Buffers",
+          "features": "Streaming, Multiplexing, typensicher"
+        }
+      },
+      "rest": {
+        "title": "A. Representational State Transfer (REST)",
+        "description": "REST ist ein Architekturprinzip für API-Entwicklung über HTTP/1.1, konzipiert von Roy Fielding (2000). Services bieten spezifizierte Endpunkte für CRUD-Operationen."
+      },
+      "graphql": {
+        "title": "B. GraphQL",
+        "description": "GraphQL ist eine Abfragesprache von Facebook, bei der Clients exakt definieren, welche Felder sie benötigen. Das reduziert Über- und Unterabrufe und bietet Flexibilität."
+      },
+      "grpc": {
+        "title": "C. Google Remote Procedure Call (gRPC)",
+        "description": "gRPC ist ein Open-Source-Framework von Google für serviceübergreifende, typgesicherte Kommunikation mit HTTP/2 und Protocol Buffers."
+      }
+    },
+    "architecture": {
+      "title": "Experimentelle Architektur & Implementierung",
+      "introduction": "Unsere Implementierung nutzt Go-basierte Microservices, inspiriert vom indonesischen Bildungssystem SISTER. Dieses verwaltet Ressourcen, Forschung und HR-Daten auf mehreren Ebenen.",
+      "systemComponents": {
+        "title": "Systemkomponenten",
+        "authService": {
+          "title": "Authentifizierungsdienst",
+          "description": "Verwaltet Authentifizierung und Autorisierung"
+        },
+        "lecturerService": {
+          "title": "Dozentenprofil-Service",
+          "description": "Ruft flache Profildaten ab"
+        },
+        "educationService": {
+          "title": "Bildungsdienst",
+          "description": "Ruft Profildaten mit Bildungsinfos (verschachtelt) ab"
+        }
+      },
+      "database": {
+        "title": "Datenbankkonfiguration",
+        "mysql": "MySQL: Langzeitspeicher",
+        "redis": "Redis: In-Memory-Cache",
+        "dataVolume": "Datenmenge: 2.221 Dozentenprofile",
+        "extendedData": "Erweiterte Daten: 6.197 Profile mit Bildungsdaten"
+      },
+      "dataRetrieval": {
+        "title": "Datenabruf-Prozess",
+        "primaryFetch": "Erstabruf aus Redis",
+        "fallback": "Bei Cache-Miss: MySQL",
+        "cachePopulation": "Cache-Aktualisierung nach MySQL-Abruf",
+        "optimized": "Optimiert für niedrige Latenz"
+      },
+      "dataStructures": {
+        "flatData": {
+          "title": "Flache Datenstruktur"
+        },
+        "nestedData": {
+          "title": "Verschachtelte Datenstruktur"
+        }
+      }
+    },
+    "performance": {
+      "title": "Leistungsanalyse & Ergebnisse",
+      "introduction": "Wir haben Antwortlatenz und CPU-Auslastung bei unterschiedlichen Datenmustern bewertet. Als Testtool diente Apache JMeter für Lasttests: flache vs. verschachtelte Daten, 100–500 gleichzeitige Anfragen.",
+      "concurrent": {
+        "title": "A. Gleichzeitige Anfragen",
+        "colorCoding": {
+          "title": "Protokoll-Farbkodierung"
+        },
+        "responseTime": {
+          "flatData": "Antwortzeit – flache Daten",
+          "nestedData": "Antwortzeit – verschachtelte Daten"
+        },
+        "cpuUtilization": {
+          "flatData": "CPU-Auslastung – flache Daten",
+          "nestedData": "CPU-Auslastung – verschachtelte Daten"
+        },
+        "keyFindings": {
+          "responseTime": {
+            "title": "Kernergebnisse – Antwortzeit:",
+            "simpleData": "Flach: gRPC 233–2.606 ms (Best), REST 1.113–4.009 ms, GraphQL 3.852–21.148 ms (Langsam)",
+            "complexData": "Verschachtelt: REST 5.201–16.646 ms (Best), gRPC 5.667–14.962 ms, GraphQL 8.510–29.734 ms (Langsam)"
+          },
+          "cpuUtilization": {
+            "title": "Kernergebnisse – CPU-Auslastung:",
+            "simpleData": "Flach: REST 10–48 % (min), gRPC 10–36 %, GraphQL 120–142 % (max)",
+            "complexData": "Verschachtelt: gRPC 30–84 %, REST 38–123 %, GraphQL 100–177 % (max)"
+          }
+        }
+      },
+      "sustained": {
+        "title": "B. Dauerläufe (5 Minuten)",
+        "responseTime": {
+          "flatData": "Dauer-Antwortzeit – flache Daten",
+          "nestedData": "Dauer-Antwortzeit – verschachtelte Daten"
+        },
+        "cpuUtilization": {
+          "flatData": "Dauer-CPU-Auslastung – flache Daten"
+        },
+        "results": {
+          "title": "Ergebnisse Dauerläufe:",
+          "point1": "gRPC durchgehend schnellste in 5-Minuten-Dauertests",
+          "point2": "REST behält stabile Performance über verschiedene Anfragevolumen",
+          "point3": "GraphQL zeigt höchsten Ressourcenverbrauch bei Daueroperationen",
+          "point4": "HTTP/2-Vorteil von gRPC wird bei Dauerlasten deutlicher"
+        }
+      },
+      "charts": {
+        "concurrentRequests": "Gleichzeitige Anfragen",
+        "responseTimeMs": "Antwortzeit (ms)",
+        "cpuUtilizationPercent": "CPU-Auslastung (%)",
+        "requestsLabel": "{count} Anfragen"
+      }
+    },
+    "findings": {
+      "title": "Ergebnisse & Empfehlungen",
+      "paragraph1": "Microservice-Architekturen sind heute Standard für skalierbare, wartbare Software. Die Wahl des Service-zu-Service-Protokolls ist entscheidend für Performance und Ressourceneffizienz.",
+      "paragraph2": "Wir verglichen flache vs. verschachtelte Daten: gRPC liefert die schnellsten Antworten, REST hat die geringste CPU-Last, GraphQL bietet Flexibilität auf Kosten höherer Ressourcen.",
+      "recommendations": {
+        "title": "Empfehlungen:",
+        "grpc": "Ideal für geringe Latenz und hohe Durchsatzanforderungen",
+        "rest": "Bestens geeignet für einfache CRUD-Operationen in ressourcenbegrenzten Umgebungen",
+        "graphql": "Für komplexe Datenanforderungen – aber Ressourceneinsatz bedenken"
+      }
+    },
+    "support": {
+      "title": "Unterstütze meine Arbeit",
+      "subtitle": "War diese Analyse hilfreich?",
+      "description": "Hilf mir, weiterhin hochwertige Technik-Inhalte und Open-Source-Projekte zu erstellen.",
+      "buyMeCoffee": "Kauf mir einen Kaffee",
+      "connectLinkedIn": "Auf LinkedIn verbinden"
+    },
+    "references": {
+      "title": "Quellen",
+      "showMore": "Alle Quellen anzeigen ({count})",
+      "showLess": "Quellen verbergen"
+    },
+    "footer": {
+      "createdBy": "Erstellt von"
+    }
+  },
+  "atGlance": {
+    "title": "Auf einen Blick",
+    "executiveSummary": "Zusammenfassung",
+    "content": "Microservice-Architektur ist DER Ansatz für skalierbare, wartbare Systeme. Die Wahl des Kommunikationsprotokolls ist entscheidend für Performance. Vergleich von REST, GraphQL und gRPC zeigt: gRPC führt bei Antwortzeiten, REST bei Ressourceneffizienz, GraphQL bei Flexibilität mit höherer Last."
+  },
+  "introduction": {
+    "title": "Einführung",
+    "modernArchitecture": "Moderne Softwarearchitektur",
+    "modernContent": "Microservices haben die Softwareentwicklung revolutioniert, indem sie komplexe Systeme in kleine, eigenständige Services aufteilen. So können Teams gezielt Funktionen entwickeln, schneller iterieren und Fehler isolieren."
+  },
+  "protocolIntroduction": {
+    "title": "Einführung API-Protokolle",
+    "protocolLandscape": "Protokoll-Landschaft",
+    "protocolContent": "Drei Protokolle dominieren die Microservice-Kommunikation: REST, GraphQL, gRPC – jedes mit eigenen Vor- und Nachteilen.",
+    "comparisonOverview": "Vergleichsübersicht",
+    "comparisonContent": "REST ist verbreitet, leidet aber unter Über-/Unterabrufen. GraphQL löst das mit präzisen Abfragen. gRPC nutzt HTTP/2 und Protocol Buffers für maximale Performance."
+  },
+  "apiOverview": {
+    "title": "API-Protokollübersicht",
+    "rest": {
+      "title": "REST",
+      "description": "Einfaches, HTTP/1.1-basiertes API-Architekturprinzip von Roy Fielding. Mehrere Endpunkte je Ressource, stateless.",
+      "keyFeatures": "Kernfunktionen:",
+      "features": [
+        "HTTP-Methoden: GET, POST, PUT, DELETE",
+        "Mehrere Endpunkte pro Ressource",
+        "JSON/XML",
+        "Stateless"
+      ],
+      "advantages": "Vorteile:",
+      "advantagesList": [
+        "Einfach & etabliert",
+        "Ausgezeichnetes Caching",
+        "Reife Toolchain",
+        "HTTP-Native Features"
+      ]
+    },
+    "graphql": {
+      "title": "GraphQL",
+      "description": "Abfragesprache von Facebook mit einem einzigen Endpunkt, bei dem Clients exakt angeben, welche Daten benötigt werden.",
+      "keyFeatures": "Kernfunktionen:",
+      "features": [
+        "Ein Endpunkt",
+        "Client-spezifische Daten",
+        "Stark typisiert",
+        "Echtzeit-Subscriptions"
+      ],
+      "advantages": "Vorteile:",
+      "advantagesList": [
+        "Keine Über-/Unterabfrage",
+        "Flexible Abfragen",
+        "Gute Tools",
+        "Schema-Introspection"
+      ]
+    },
+    "grpc": {
+      "title": "gRPC",
+      "description": "Open Source von Google: Hochleistungs-RPC-Framework mit HTTP/2 und Protocol Buffers, plattform- und sprachneutral.",
+      "keyFeatures": "Kernfunktionen:",
+      "features": [
+        "HTTP/2",
+        "Protocol Buffers",
+        "Bidirektionales Streaming",
+        "Sprachneutral"
+      ],
+      "advantages": "Vorteile:",
+      "advantagesList": [
+        "Top-Performance",
+        "Effiziente Serialisierung",
+        "Strenge Typisierung",
+        "Streaming-Support"
+      ]
+    }
+  },
+  "methodology": {
+    "title": "Architektur & Methodik",
+    "experimentalSetup": "Versuchsaufbau",
+    "setupContent": "Golang-Microservices basierend auf einer Bildungs-Informationsplattform. Drei Container-Services:",
+    "services": [
+      "Authentifizierung",
+      "Dozentenprofile (flach)",
+      "Dozentenprofile mit Bildung (verschachtelt)"
+    ],
+    "databaseConfig": "Datenbank",
+    "databaseContent": "MySQL als dauerhafter Speicher, Redis als In-Memory-Cache. Bewertet wurden flache vs. verschachtelte Datenmuster.",
+    "testingMethodology": "Testmethodik",
+    "testingDescription": "Apache JMeter für Lasttests, geprüft wurden:",
+    "testingScenarios": [
+      "100–500 Anfragen",
+      "Flache & verschachtelte Daten",
+      "Latenz & CPU-Last",
+      "10 Wiederholungen für Statistik"
+    ]
+  },
+  "performanceResults": {
+    "title": "Ergebnisse & Analyse",
+    "responseTime": {
+      "title": "Antwortzeiten",
+      "flatData": {
+        "title": "Flache Daten",
+        "description": "Deutliche Unterschiede unter Last:",
+        "grpc": {
+          "label": "gRPC (Beste)",
+          "performance": "233,84 ms – 2.606,59 ms",
+          "range": "100–500 Anfragen"
+        },
+        "rest": {
+          "label": "REST (Mittel)",
+          "performance": "1.113,33 ms – 4.009,83 ms",
+          "range": "100–500 Anfragen"
+        },
+        "graphql": {
+          "label": "GraphQL (Langsamste)",
+          "performance": "3.852,07 ms – 21.148,14 ms",
+          "range": "100–500 Anfragen"
+        }
+      },
+      "nestedData": {
+        "title": "Verschachtelte Daten",
+        "description": "REST zeigt hier starke Performance:",
+        "rest": {
+          "label": "REST (Beste)",
+          "performance": "5.201,39 ms – 16.646,55 ms",
+          "range": "100–500 Anfragen"
+        },
+        "grpc": {
+          "label": "gRPC (Mittel)",
+          "performance": "5.667,33 ms – 14.962,61 ms",
+          "range": "100–500 Anfragen"
+        },
+        "graphql": {
+          "label": "GraphQL (Langsamste)",
+          "performance": "8.510,84 ms – 29.734,59 ms",
+          "range": "100–500 Anfragen"
+        }
+      }
+    },
+    "cpuUtilization": {
+      "title": "CPU-Auslastung",
+      "flatData": {
+        "title": "Flache Daten",
+        "description": "Ressourcennutzung:",
+        "rest": {
+          "label": "REST (Effizienteste)",
+          "performance": "10,26 % – 48,90 %",
+          "range": "100–500 Anfragen"
+        },
+        "grpc": {
+          "label": "gRPC (Mittel)",
+          "performance": "10,95 % – 36,11 %",
+          "range": "100–500 Anfragen"
+        },
+        "graphql": {
+          "label": "GraphQL (Ressourcenintensiv)",
+          "performance": "120,09 % – 142,15 %",
+          "range": "Multi-Core"
+        }
+      },
+      "nestedData": {
+        "title": "Verschachtelte Daten",
+        "description": "Alle Protokolle zeigen höhere Last, GraphQL am höchsten:",
+        "rest": {
+          "label": "REST (Effizienteste)",
+          "performance": "38,23 % – 123,01 %",
+          "range": "100–500 Anfragen"
+        },
+        "grpc": {
+          "label": "gRPC (Mittel)",
+          "performance": "30,11 % – 84,04 %",
+          "range": "100–500 Anfragen"
+        },
+        "graphql": {
+          "label": "GraphQL (Ressourcenintensiv)",
+          "performance": "100 %+ – 177,41 %",
+          "range": "Multi-Core"
+        }
+      }
+    },
+    "consecutiveRequest": {
+      "title": "Fortlaufende Anfragen",
+      "description": "5 Minuten Dauerlast:",
+      "scenarios": [
+        "Flach (100): gRPC 79,90 ms, REST 152,56 ms, GraphQL 196,90 ms",
+        "Flach (500): gRPC 67,75 ms, REST 149,68 ms, GraphQL 204,35 ms",
+        "Verschachtelt (100): gRPC 437,03 ms, REST 510,47 ms, GraphQL 589,25 ms",
+        "Verschachtelt (500): gRPC 748,22 ms, REST 798,41 ms, GraphQL 1.035,46 ms"
+      ],
+      "conclusion": "gRPC bleibt auch bei Dauerlast führend."
+    }
+  },
+  "keyFindings": {
+    "title": "Schlüsselergebnisse & Implikationen",
+    "performanceCharacteristics": {
+      "title": "Leistungsmerkmale",
+      "grpcAdvantages": {
+        "title": "gRPC-Vorteile",
+        "advantages": [
+          "Immer schnellste Antwortzeiten",
+          "HTTP/2-Vorteile (Multiplexing, Streaming)",
+          "Effiziente Protocol-Buffer-Serialisierung",
+          "Ideal für interne Hochfrequenz-Kommunikation"
+        ]
+      },
+      "restStrengths": {
+        "title": "REST-Stärken",
+        "strengths": [
+          "Geringe CPU-Last",
+          "Starkes HTTP-Caching",
+          "Einfach und bekannt",
+          "Reife Toolchain"
+        ]
+      }
+    },
+    "graphqlConsiderations": {
+      "title": "GraphQL-Betrachtungen",
+      "description": "GraphQL bietet Flexibilität, hat aber folgende Punkte:",
+      "considerations": [
+        "Höhere Latenz bei Last",
+        "Sehr hohe CPU-Last (>100 %)",
+        "Overhead bei Abfrageparsing",
+        "Komplexeres Caching nötig"
+      ],
+      "conclusion": "Trotz Performance-Trade-offs wertvoll für komplexe Datenanforderungen."
+    }
+  },
+  "recommendations": {
+    "title": "Architektur-Empfehlungen",
+    "protocolSelection": {
+      "title": "Protokoll-Auswahlrichtlinien",
+      "grpc": {
+        "title": "gRPC wählen für:",
+        "scenarios": [
+          "Hochleistungs-Service-zu-Service-Kommunikation",
+          "Niedrige Latenzanforderungen",
+          "Streaming-Szenarien",
+          "Polyglotte Umgebungen mit starker Typisierung"
+        ]
+      },
+      "rest": {
+        "title": "REST wählen für:",
+        "scenarios": [
+          "Öffentliche APIs",
+          "Einfache CRUD-Operationen",
+          "Ressourcenbeschränkte Umgebungen",
+          "Wenn HTTP-Caching wichtig ist"
+        ]
+      },
+      "graphql": {
+        "title": "GraphQL wählen für:",
+        "scenarios": [
+          "Komplexe Client-Datenanforderungen",
+          "Mobile Apps mit begrenzter Bandbreite",
+          "API-Gateway & Aggregationsschicht",
+          "Wenn Flexibilität wichtiger ist als Performance"
+        ]
+      }
+    },
+    "hybridArchitecture": {
+      "title": "Hybride Architektur",
+      "description": "Oft sinnvoll: Verschiedene Protokolle strategisch kombinieren:",
+      "approaches": [
+        "gRPC intern zwischen Services",
+        "REST für öffentliche Endpunkte",
+        "GraphQL für Client-Aggragation & komplexe Abfragen"
+      ]
+    }
+  },
+  "conclusion": {
+    "title": "Fazit",
+    "description": "Unsere umfassende Analyse zeigt: Die Protokollwahl beeinflusst Performance und Ressourceneffizienz stark. Die Ergebnisse liefern klare Leitlinien für Architekten und Entwickler.",
+    "keyTakeaways": {
+      "title": "Kernaussagen:",
+      "takeaways": [
+        "gRPC siegt bei Antwortzeiten",
+        "REST punktet mit geringster CPU-Last",
+        "GraphQL bietet Flexibilität, aber höhere Kosten",
+        "Protokollwahl muss zum Anwendungsfall passen"
+      ]
+    },
+    "http2Benefits": "HTTP/2 (Multiplexing, effiziente Serialisierung) trägt wesentlich zu gRPCs Leistung bei. Dennoch sollten auch Komplexität, Team-Expertise und Wartbarkeit berücksichtigt werden.",
+    "futureConsiderations": "Microservices entwickeln sich weiter – das Verständnis dieser Leistungsmerkmale ermöglicht ausgewogene Entscheidungen und oft den Einsatz mehrerer Protokolle im selben System."
+  },
+  "references": {
+    "title": "Quellen",
+    "showMore": "Mehr Quellen anzeigen ({count})",
+    "showLess": "Weniger Quellen anzeigen"
+  }
+}
